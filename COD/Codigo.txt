@@ -1,0 +1,238 @@
+
+### validar número digtado
+### tem que ser maior ou igual a 0 e menor ou igual a 255
+### no primeiro octeto tem que ser maior ou igual a 1 e menor ou igual a 255
+
+### to do: validar se octetoX >= 0 and octetoX <= 255
+### to do: validar se octeto1 >= 0 and octetoX <= 255
+
+
+
+
+
+
+
+
+### tokenizar o endereço digitado
+
+octeto1endIP = int(input("DIGITE: "))
+
+
+'''
+octeto2
+octeto3
+octeto4
+
+
+endIP
+
+mask
+'''
+
+### calcular classe
+
+
+if (octeto1endIP == 127):
+    print("LOOPBACK")
+
+elif (octeto1endIP <= 126):
+    print("CLASSE A")
+
+elif( (octeto1endIP >= 128) and (octeto1endIP <= 191) ):
+    print("CLASSE B")
+
+elif( (octeto1endIP >= 192) and (octeto1endIP <= 223) ):
+    print("CLASSE C")
+
+elif( (octeto1endIP >= 224) and (octeto1endIP <= 239) ):
+    print("CLASSE D")
+    print("ENDERECO RESERVADO")
+
+elif( (octeto1endIP >= 240) and (octeto1endIP <= 255) ):
+    print("CLASSE E")
+    print("ENDERECO RESERVADO")
+
+
+
+### to do: converter octetoX em binário
+''' octeto1EmBin + '''
+
+
+
+
+### potência:   pow(base, exp)
+
+
+
+
+''' concatenar cada octeto em binário '''
+''' resulta na máscara em binário '''
+###binMask : char[32] = octeto1EmBin + octeto2EmBin + octeto3EmBin + octeto4EmBin
+
+
+'''
+def nome_funcao( parametro ) :
+    return (retorno)
+
+'''
+
+octeto = 255
+
+def associaQtd1 (octeto) :
+    if ( octeto == 255 ) :
+        qtd1octeto = 8
+        return (qtd1octeto)
+        
+    elif ( octeto == 254 ) :
+        qtd1octeto = 7
+        return (qtd1octeto)
+        
+    elif ( octeto == 252 ) :
+        qtd1octeto = 6
+        return (qtd1octeto)
+        
+    elif ( octeto == 248 ) :
+        qtd1octeto = 5
+        return (qtd1octeto)
+        
+    elif ( octeto == 240 ) :
+        qtd1octeto = 4
+        return (qtd1octeto)
+        
+    elif ( octeto == 224 ) :
+        qtd1octeto = 3
+        return (qtd1octeto)
+        
+    elif ( octeto == 192 ) :
+        qtd1octeto = 2
+        return (qtd1octeto)
+        
+    elif ( octeto == 128 ) :
+        qtd1octeto = 1
+        return (qtd1octeto)
+        
+    elif ( octeto == 0 ) :
+        qtd1octeto = 0
+        return (qtd1octeto)
+
+''' calcular quantidade de 1 em cada octeto '''
+
+
+'''
+def calcQtd1Octeto( octetoEmBin ) :
+    
+    
+    
+    return qtd1Octeto
+'''
+
+
+### quantidade de 1 na máscara
+### resulta no cidr
+
+qtd1octeto1Mask = associaQtd1 ( 255 )    ### retorna 8
+qtd1octeto2Mask = associaQtd1 ( 255 )    ### retorna 8
+qtd1octeto3Mask = associaQtd1 ( 255 )    ### retorna 8
+qtd1octeto4Mask = associaQtd1 ( 192 )    ### retorna 2
+
+
+print( f"Octeto 1: {qtd1octeto1Mask}" )
+print( f"Octeto 2: {qtd1octeto2Mask}" )
+print( f"Octeto 3: {qtd1octeto3Mask}" )
+print( f"Octeto 4: {qtd1octeto4Mask}" )
+
+
+cidr = qtd1octeto1Mask + qtd1octeto2Mask + qtd1octeto3Mask + qtd1octeto4Mask
+print (f"CIDR: {cidr}")
+
+
+
+''' expoente para calcular Subrede '''
+
+def calcExpSubrede(octeto1endIP):
+    
+    if (octeto1endIP == 127):
+        print("LOOPBACK")
+        print("ENDERECO RESERVADO")
+    
+    elif ( (octeto1endIP >= 1) and (octeto1endIP <= 126) ):
+        print("CLASSE A")
+        expSubrede = ( qtd1octeto2Mask + qtd1octeto3Mask + qtd1octeto4Mask )
+    
+    elif( (octeto1endIP >= 128) and (octeto1endIP <= 191) ):
+        print("CLASSE B")
+        expSubrede = ( qtd1octeto3Mask + qtd1octeto4Mask )
+    
+    elif( (octeto1endIP >= 192) and (octeto1endIP <= 223) ):
+        print("CLASSE C")
+        expSubrede = ( qtd1octeto4Mask )
+    
+    elif( (octeto1endIP >= 224) and (octeto1endIP <= 239) ):
+        print("ENDERECO RESERVADO")
+        print("224.0.0.0 - 255.255.255.255 FAIXA DE ENDERECO RESERVADO")
+    
+    elif( (octeto1endIP >= 240) and (octeto1endIP <= 255) ):
+        print("ENDERECO RESERVADO")
+        print("224.0.0.0 - 255.255.255.255 FAIXA DE ENDERECO RESERVADO")
+
+    
+        
+    return expSubrede
+
+
+expSubrede = 2
+
+### calcular subrede
+qtdSubredes = pow(2, expSubrede)
+print( f"QTD SUBREDES: { qtdSubredes } " )
+
+
+
+''' calcular expoente de endereços '''
+
+def calcExpHost(octeto1):
+    
+    if (octeto1 == 127):
+        print("LOOPBACK")
+        print("ENDERECO RESERVADO")
+    
+    elif ( (octeto1 >= 1) and (octeto1 <= 126) ):
+        print("CLASSE A")
+        expHost = 32 - ( qtd1octeto2 + qtd1octeto3 + qtd1octeto4 )
+    
+    elif( (octeto1 >= 128) and (octeto1 <= 191) ):
+        print("CLASSE B")
+        expHost = 32 - ( qtd1octeto3 + qtd1octeto4 )
+    
+    elif( (octeto1 >= 192) and (octeto1 <= 223) ):
+        print("CLASSE C")
+        expHost = 32 - ( qtd1octeto4 )
+    
+    elif( (octeto1 >= 224) and (octeto1 <= 239) ):
+        print("ENDERECO RESERVADO")
+        print("224.0.0.0 - 255.255.255.255 FAIXA DE ENDERECO RESERVADO")
+    
+    elif( (octeto1 >= 240) and (octeto1 <= 255) ):
+        print("ENDERECO RESERVADO")
+        print("224.0.0.0 - 255.255.255.255 FAIXA DE ENDERECO RESERVADO")
+
+    
+        
+    return expHost
+
+
+
+### calcular quantidade de enderecos
+expHost = 6
+qtdEndereco = pow(2, expHost)
+print( f"QTD ENDERECOS: { qtdEndereco } " )
+
+
+
+
+
+
+
+
+
+
