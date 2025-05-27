@@ -1,0 +1,60 @@
+
+
+
+
+cd PATH
+
+
+
+
+
+md nome
+cd nome
+python -m venv .venv
+.venv\Scripts\activate
+
+
+
+pip install flet[all]
+
+
+
+flet --version
+
+
+flet create
+
+
+
+cd PATH
+
+
+
+
+
+
+.venv\Scripts\activate
+
+
+cd 
+
+
+
+
+flet run --web calcc.py
+
+
+
+
+
+flet run --web --port PORT calcc.py
+
+flet run --web --port 8080 calcc.py
+
+
+
+.venv\Scripts\deactivate
+
+
+
+
