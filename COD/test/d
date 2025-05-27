@@ -1,0 +1,167 @@
+import flet as ft
+
+def associaQtd1(octeto):
+    valores = {255: 8, 254: 7, 252: 6, 248: 5, 240: 4, 224: 3, 192: 2, 128: 1, 0: 0}
+    return valores.get(octeto, 0)
+
+def ip_para_binario(ip):
+    return ".".join([f"{int(o):08b}" for o in ip.split(".")])
+
+def and_binario(ip, mask):
+    return ".".join(str(int(ip.split(".")[i]) & int(mask.split(".")[i])) for i in range(4))
+
+def ip_para_int(ip):
+    partes = list(map(int, ip.split(".")))
+    return (partes[0] << 24) + (partes[1] << 16) + (partes[2] << 8) + partes[3]
+
+def int_para_ip(valor):
+    return f"{(valor >> 24) & 255}.{(valor >> 16) & 255}.{(valor >> 8) & 255}.{valor & 255}"
+
+def main(page: ft.Page):
+    page.title = "Calculadora IPV4"
+    page.scroll = "auto"  # Ativa rolagem na página
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+
+    txt_end_ip = ft.TextField(label="Digite o endereço IP", hint_text="xxx.xxx.xxx.xxx", width=300)
+    txt_mask = ft.TextField(label="Digite a máscara", hint_text="xxx.xxx.xxx.xxx", width=300)
+
+    resultado_tabela = ft.DataTable(
+        columns=[
+            ft.DataColumn(label=ft.Text("Campo", weight=ft.FontWeight.BOLD)),
+            ft.DataColumn(label=ft.Text("Valor", weight=ft.FontWeight.BOLD)),
+        ],
+        rows=[],
+    )
+
+    def calcular_classe(octeto1):
+        if octeto1 == 127:
+            return "LOOPBACK - Endereço Reservado"
+        elif 1 <= octeto1 <= 126:
+            return "Classe A"
+        elif 128 <= octeto1 <= 191:
+            return "Classe B"
+        elif 192 <= octeto1 <= 223:
+            return "Classe C"
+        elif 224 <= octeto1 <= 239:
+            return "Classe D - Endereço Reservado"
+        elif 240 <= octeto1 <= 255:
+            return "Classe E - Endereço Reservado"
+        else:
+            return "Inválido"
+
+    def btn_click(e):
+        ip = txt_end_ip.value.strip()
+        mask = txt_mask.value.strip()
+
+        resultado_tabela.rows.clear()
+
+        if not ip:
+            txt_end_ip.error_text = "Digite o endereço IP"
+            page.update()
+            return
+        else:
+            txt_end_ip.error_text = None
+
+        if not mask:
+            txt_mask.error_text = "Digite a máscara"
+            page.update()
+            return
+        else:
+            txt_mask.error_text = None
+
+        try:
+            ip_octetos = list(map(int, ip.split('.')))
+            mask_octetos = list(map(int, mask.split('.')))
+
+            if len(ip_octetos) != 4 or len(mask_octetos) != 4:
+                raise ValueError("IP ou Máscara inválido (precisam de 4 octetos)")
+
+            if not (1 <= ip_octetos[0] <= 255):
+                raise ValueError("1º octeto do IP deve estar entre 1 e 255")
+
+            if not all(0 <= o <= 255 for o in ip_octetos[1:] + mask_octetos):
+                raise ValueError("Octetos devem estar entre 0 e 255")
+
+            if mask_octetos[3] == 255:
+                raise ValueError("4º octeto da Máscara não pode ser 255")
+
+            for o in mask_octetos:
+                if o not in [255, 254, 252, 248, 240, 224, 192, 128, 0]:
+                    raise ValueError("Máscara inválida: use valores como 0, 128, 192, 224, 240, 248, 252, 254, 255")
+
+            classe_ip = calcular_classe(ip_octetos[0])
+            cidr = sum(associaQtd1(o) for o in mask_octetos)
+            qtd_hosts = (2 ** (32 - cidr)) - 2
+            ip_str = ".".join(map(str, ip_octetos))
+            mask_str = ".".join(map(str, mask_octetos))
+            mascara_bin = ip_para_binario(mask_str)
+            subrede_base = and_binario(ip_str, mask_str)
+            primeiro_valido = int_para_ip(ip_para_int(subrede_base) + 1)
+
+            resultado_tabela.rows.extend([
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Endereço IP")), ft.DataCell(ft.Text(ip_str))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Máscara")), ft.DataCell(ft.Text(mask_str))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Máscara (binário)")), ft.DataCell(ft.Text(mascara_bin))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Endereço de sub-rede")), ft.DataCell(ft.Text(subrede_base))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("1º IP válido")), ft.DataCell(ft.Text(primeiro_valido))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Classe")), ft.DataCell(ft.Text(classe_ip))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("CIDR")), ft.DataCell(ft.Text(f"/{cidr}"))]),
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Quantidade de hosts por sub-rede")), ft.DataCell(ft.Text(str(qtd_hosts)))]),
+            ])
+
+            ip_int = ip_para_int(ip_str)
+            mask_int = ip_para_int(mask_str)
+            bloco = 2 ** (32 - cidr)
+            qtd_subredes = min((2**cidr), 50)
+
+            resultado_tabela.rows.append(
+                ft.DataRow(cells=[
+                    ft.DataCell(ft.Text("Endereços das Sub-redes", weight=ft.FontWeight.BOLD)),
+                    ft.DataCell(ft.Text(" "))
+                ])
+            )
+
+            for i in range(qtd_subredes):
+                subrede = int_para_ip((ip_int & mask_int) + i * bloco)
+                resultado_tabela.rows.append(
+                    ft.DataRow(cells=[
+                        ft.DataCell(ft.Text(f"Sub-rede {i + 1}")),
+                        ft.DataCell(ft.Text(subrede)),
+                    ])
+                )
+
+            if qtd_subredes == 50:
+                resultado_tabela.rows.append(
+                    ft.DataRow(cells=[
+                        ft.DataCell(ft.Text("...")),
+                        ft.DataCell(ft.Text("Exibindo apenas as primeiras 50 sub-redes")),
+                    ])
+                )
+
+        except Exception as ex:
+            resultado_tabela.rows = [
+                ft.DataRow(cells=[ft.DataCell(ft.Text("Erro")), ft.DataCell(ft.Text(str(ex)))])
+            ]
+
+        resultado_tabela.update()
+        page.update()
+
+    page.add(
+        ft.Column(
+            [
+                ft.Text("Calculadora IPV4", size=30, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                txt_end_ip,
+                txt_mask,
+                ft.ElevatedButton("Calcular", on_click=btn_click),
+                resultado_tabela,
+            ],
+            scroll="auto",  # ativa rolagem vertical
+            expand=True,    # ocupa o espaço da tela
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10,
+        )
+    )
+
+ft.app(target=main)
